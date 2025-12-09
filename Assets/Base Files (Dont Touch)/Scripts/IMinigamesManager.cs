@@ -6,8 +6,9 @@ public interface IMinigamesManager
 {
 
     /// <summary>
-    /// Query this for the currently set difficulty of the game. 
-    /// You can optionally use this to make your minigame easier or harder.
+    /// Query this for the currently set difficulty of the game.
+    /// It is highly encouraged that you use this to make your minigame easier or harder.
+    /// This will always be a value between 0 (very easy) and 1 (very difficult).
     /// </summary>
     float GetCurrentMinigameDifficulty();
 
