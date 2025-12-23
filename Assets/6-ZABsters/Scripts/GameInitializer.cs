@@ -7,24 +7,24 @@ namespace ZABsters {
         [System.NonSerialized]
         public bool isSantaWorkshop = false;
 
+        [System.NonSerialized]
+        public int taskNumber = 0;
+
         public Sprite[] sprites;
 
-        public SpriteRenderer bgImage;
+        public Image bgImage;
 
         void Start()
         {
             //ranodmly assign isSantaWorkshop value
-            Debug.Log("WSG BRODIE");
-            isSantaWorkshop = Random.value > 0.5f;
+            // Debug.Log("WSG BRODIE");
+            // isSantaWorkshop = Random.value > 0.5f;
 
-            if(isSantaWorkshop)
-            {
-                bgImage.sprite = sprites[0];
-            }
-            else
-            {
-                bgImage.sprite = sprites[1];
-            }
+            //task number is randomly either 0, 1, 2:
+            taskNumber = Random.Range(0, 3);
+
+            //if 0, set bgimage to sprites[0], otherwise set to sprites[1]
+            bgImage.sprite = (taskNumber == 0) ? sprites[0] : sprites[1];
         }
 
 
