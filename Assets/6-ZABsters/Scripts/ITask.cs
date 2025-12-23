@@ -10,10 +10,13 @@ namespace ZABsters {
         private AudioClipsList audioClipsList;
         private AudioSource winSound;
         private AudioSource loseSound;
+        private ToolSelectionAnimator toolAnimator; //to end ui animations
         void Start()
         {
             //find component in scene of AudioClipsList:
             audioClipsList = FindObjectOfType<AudioClipsList>();
+            //find component in scene of tool slection animator
+            toolAnimator = FindObjectOfType<ToolSelectionAnimator>();
             //get the win and lose sounds from the AudioClipsList component:
             winSound = Managers.AudioManager.CreateAudioSource();
             winSound.clip = audioClipsList.winClip;
@@ -24,6 +27,12 @@ namespace ZABsters {
         {
             if(CheckKeyPressed())
             {
+                //to initiate fade out of ui
+                if (toolAnimator != null)
+                {
+                    toolAnimator.FadeOut();
+                }
+
                 float endGameDelay = 0.5f;
                 if(CheckTool())
                 {
