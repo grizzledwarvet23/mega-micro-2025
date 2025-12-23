@@ -19,11 +19,13 @@ namespace ZABsters {
         private AudioSource loseSound;
         private ToolSelectionAnimator toolAnimator; //to end ui animations
 
-        private int sampleCorrectAnswer = 0;
+        // private int sampleCorrectAnswer = 0;
 
         public GameObject[] taskObjects;
         public GameObject[] winObjects;
         public GameObject[] nonWinObjects;
+
+        public GameObject[] loseObjects;
 
         public AudioClip guitarClip;
         public AudioClip pixieClip;
@@ -31,7 +33,6 @@ namespace ZABsters {
         public AudioClip fireStartClip;
         public AudioClip extinguisherClip;
         public AudioClip timerClip;
-
 
         // public GameObject giftTaskObjects;
         // public GameObject snowTaskObjects;
@@ -44,9 +45,9 @@ namespace ZABsters {
             // isSantaWorkshop = Random.value > 0.5f;
 
             //task number is randomly either 0, 1, 2:
-            taskNumber = 0; //  Random.Range(0, 3);
-            sampleCorrectAnswer = Random.Range(0, 3);
-            Debug.Log("correct answer is: " + sampleCorrectAnswer);
+            taskNumber = Random.Range(0, 3);
+            // sampleCorrectAnswer = Random.Range(0, 3);
+            // Debug.Log("correct answer is: " + sampleCorrectAnswer);
 
             //if 0, set bgimage to sprites[0], otherwise set to sprites[1]
             bgImage.sprite = (taskNumber == 0) ? sprites[0] : sprites[1];
@@ -115,11 +116,23 @@ namespace ZABsters {
                     audioClipsList.bgMusicSource.Stop();
                     winObjects[taskNumber].SetActive(true);
                     nonWinObjects[taskNumber].SetActive(false);
-                    float delayBeforeWinSound = 0;
                     
                     //now lets do some specific shiz based off it
 
-                    if(taskNumber == 1) // sleigh repair
+                    if(taskNumber == 0)
+                    {
+                        AudioSource fireStartSound = Managers.AudioManager.CreateAudioSource();
+                        fireStartSound.clip = fireStartClip;
+                        fireStartSound.Play();
+                        //now play the extinguisher sound at a slight delay:
+                        //then play extinguisher sound at a slight delay:
+                        //using extinguisherClip:
+                        //stop firestart sound after 2 seconds:
+                        //using timerClip:
+                        Invoke("PlayExtinguisherSound", 2);
+                        endGameDelay = fireStartClip.length + pixieClip.length + 0.1f;
+                    }
+                    else if(taskNumber == 1) // sleigh repair
                     {
                         AudioSource guitarSound = Managers.AudioManager.CreateAudioSource();
                         guitarSound.clip = guitarClip;
@@ -127,8 +140,13 @@ namespace ZABsters {
                         guitarSound.Play();
                         Invoke("PlayPixieSound", guitarSound.clip.length);
                         endGameDelay = guitarSound.clip.length + pixieClip.length + 0.1f;
+                    } else if(taskNumber == 2) // snow shoveling
+                    {
+                        AudioSource timerSound = Managers.AudioManager.CreateAudioSource();
+                        timerSound.clip = timerClip;
+                        timerSound.Play();
+                        endGameDelay = timerSound.clip.length + 0.1f;
                     }
-                    //Invoke("PlayWinSound", delayBeforeWinSound);
 
                 }
                 else
@@ -138,6 +156,7 @@ namespace ZABsters {
                     loseSound.Play();
                     endGameDelay = loseSound.clip.length;
                     audioClipsList.bgMusicSource.Stop();
+                    loseObjects[taskNumber].SetActive(true);
                 }
                 //end minigame in 2 seconds:
                 Invoke("EndMinigame", endGameDelay);
@@ -148,6 +167,13 @@ namespace ZABsters {
         void PlayWinSound()
         {
             winSound.Play();
+        }
+
+        void PlayExtinguisherSound()
+        {
+            AudioSource extinguisherSound = Managers.AudioManager.CreateAudioSource();
+            extinguisherSound.clip = extinguisherClip;
+            extinguisherSound.Play();
         }
 
         void PlayPixieSound()
@@ -164,16 +190,18 @@ namespace ZABsters {
         }
         public bool CheckTool()
         {
+            ToolSelectionAnimator toolAnimator = FindObjectOfType<ToolSelectionAnimator>();
+            int correctAnswer = toolAnimator.correctAnswer;
             //correct asnwer. w is 0, a is 1, s is 2
-            if(Input.GetKeyDown(KeyCode.W) && 0 == sampleCorrectAnswer)
+            if(Input.GetKeyDown(KeyCode.W) && 0 == correctAnswer)
             {
                 return true;
             }
-            else if (Input.GetKeyDown(KeyCode.A) && 1 == sampleCorrectAnswer)
+            else if (Input.GetKeyDown(KeyCode.A) && 1 == correctAnswer)
             {
                 return true;
             }
-            else if (Input.GetKeyDown(KeyCode.S) && 2 == sampleCorrectAnswer)
+            else if (Input.GetKeyDown(KeyCode.S) && 2 == correctAnswer)
             {
                 return true;
             }
