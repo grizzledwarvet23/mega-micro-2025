@@ -14,7 +14,7 @@ namespace ZABsters {
 
         public Image bgImage;
 
-        void Start()
+        void Awake()
         {
             //ranodmly assign isSantaWorkshop value
             // Debug.Log("WSG BRODIE");

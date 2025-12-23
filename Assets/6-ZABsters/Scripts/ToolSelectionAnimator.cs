@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace ZABsters {
     public class ToolSelectionAnimator : MonoBehaviour
@@ -11,20 +12,19 @@ namespace ZABsters {
         public Image glow2; //glow under second button
         public Image glow3; //glow under third button
         
-        [Header("tool sprites for fixing gift")] //isSantasWorkshop
+        [Header("tool sprites for fixing gift")] 
         public GameObject teddyBear;
-        public GameObject extinguisher; //right answer, first button W
+        public GameObject extinguisher; 
         public GameObject appleCore;
         
         [Header("tool sprites for snow shoveling")]
         public GameObject shovel;
         public GameObject camera;
-        public GameObject clock; //right answer, third button s
+        public GameObject clock; 
         
-        //not sure if we end up using these
         [Header("tool sprites for sleigh repair")]
         public GameObject hammer;
-        public GameObject guitar; //right answer, second button a
+        public GameObject guitar;
         public GameObject dynamite;
 
         [Header("animation settings")]
@@ -36,43 +36,143 @@ namespace ZABsters {
         private bool isAnimating = false;
         private int currentGlowIndex = 0;
         private Coroutine glowCoroutine;
+        //implicit button reference
+        public int correctAnswer; //0 = w, 1 = a, 2 = s
         
-        void Start()
+        [Header("tool slots")]
+        public Transform leftSlot;   //W button position
+        public Transform centerSlot; //A button position
+        public Transform rightSlot;  //S button position
+
+        void Awake()
         {
             //check isSantaWorkshop w GameInitializer game object
-            gameInitializer = FindObjectOfType<GameInitializer>();
+            gameInitializer = FindObjectOfType<ZABsters.GameInitializer>();
             //have glow state set on the first button
             canvasGroup.alpha = 0f;
             SetGlowAlpha(glow1, 0f);
             SetGlowAlpha(glow2, 0f);
             SetGlowAlpha(glow3, 0f);
-            SetupToolSprites();
+            //SetupToolSprites();
             //canvas should start disabled, so this waits for it to be enabled
         }
         void OnEnable()
         {
             if (!isAnimating)
             {
+                SpawnRandomizedTools();
                 StartCoroutine(FadeInAnimation());
             }
         }
-        void SetupToolSprites()
+        void SpawnRandomizedTools()
         {
             if (gameInitializer != null)
             {
-                bool isWorkshop = gameInitializer.isSantaWorkshop;
-                //workshop tools
-                teddyBear.SetActive(isWorkshop);
-                extinguisher.SetActive(isWorkshop);
-                appleCore.SetActive(isWorkshop);
-                //snow tools
-                shovel.SetActive(!isWorkshop);
-                camera.SetActive(!isWorkshop);
-                clock.SetActive(!isWorkshop);
-                //sleigh ride tools, set to always false for now
-                hammer.SetActive(false);
-                guitar.SetActive(false);
-                dynamite.SetActive(false);
+                int taskNumber = gameInitializer.taskNumber;
+                GameObject[] toolsForTask = GetToolsForTask(taskNumber, out GameObject correctTool);
+                Transform[] slots = { leftSlot, centerSlot, rightSlot };
+                //setting workshop tools randomly
+                List<Transform> availableSlots = new List<Transform>(slots);
+                List<int> availableButtons = new List<int> { 0, 1, 2 }; // W, A, S
+                foreach (GameObject toolPrefab in toolsForTask)
+                {
+                    int randomIndex = Random.Range(0, availableSlots.Count);
+                    Transform slot = availableSlots[randomIndex];
+                    int buttonIndex = availableButtons[randomIndex];
+                    //spawn tool in slot
+                    GameObject tool = Instantiate(toolPrefab, slot);
+                    RectTransform rectTransform = tool.GetComponent<RectTransform>();
+                    rectTransform.anchoredPosition = Vector2.zero; // Center in slot
+                    // setcorrect answer to button
+                    if (toolPrefab == correctTool)
+                    {
+                        correctAnswer = buttonIndex;
+                    }
+                    availableSlots.RemoveAt(randomIndex);
+                    availableButtons.RemoveAt(randomIndex);
+                }
+            }
+        }
+//         void SpawnRandomizedTools()
+// {
+//     Debug.Log("=== SpawnRandomizedTools START ===");
+    
+//     if (gameInitializer == null)
+//     {
+//         Debug.LogError("GameInitializer is NULL!");
+//         return;
+//     }
+    
+//     int taskNumber = gameInitializer.taskNumber;
+//     Debug.Log($"Task Number: {taskNumber}");
+    
+//     GameObject correctTool;
+//     GameObject[] toolsForTask = GetToolsForTask(taskNumber, out correctTool);
+    
+//     Debug.Log($"Tools to spawn: {toolsForTask.Length}");
+//     Debug.Log($"Correct tool: {(correctTool != null ? correctTool.name : "NULL")}");
+    
+//     if (leftSlot == null) Debug.LogError("leftSlot is NULL!");
+//     if (centerSlot == null) Debug.LogError("centerSlot is NULL!");
+//     if (rightSlot == null) Debug.LogError("rightSlot is NULL!");
+    
+//     Transform[] slots = { leftSlot, centerSlot, rightSlot };
+    
+//     // Shuffle the slots
+//     List<Transform> availableSlots = new List<Transform>(slots);
+//     List<int> availableButtons = new List<int> { 0, 1, 2 };
+    
+//     foreach (GameObject toolPrefab in toolsForTask)
+//     {
+//         Debug.Log($"Processing tool: {(toolPrefab != null ? toolPrefab.name : "NULL PREFAB")}");
+        
+//         int randomIndex = Random.Range(0, availableSlots.Count);
+//         Transform slot = availableSlots[randomIndex];
+//         int buttonIndex = availableButtons[randomIndex];
+        
+//         Debug.Log($"Spawning in slot: {slot.name} at button index: {buttonIndex}");
+        
+//         // Spawn tool in slot
+//         GameObject tool = Instantiate(toolPrefab, slot);
+//         Debug.Log($"Tool instantiated: {tool.name}");
+        
+//         RectTransform rectTransform = tool.GetComponent<RectTransform>();
+//         rectTransform.anchoredPosition = Vector2.zero;
+        
+//         Debug.Log($"Tool position set to: {rectTransform.anchoredPosition}");
+        
+//         // Check if this is the correct answer
+//         if (toolPrefab == correctTool)
+//         {
+//             correctAnswer = buttonIndex;
+//             Debug.Log($"CORRECT ANSWER SET TO: {correctAnswer}");
+//         }
+        
+//         availableSlots.RemoveAt(randomIndex);
+//         availableButtons.RemoveAt(randomIndex);
+//     }
+    
+//     Debug.Log("=== SpawnRandomizedTools END ===");
+// }
+        GameObject[] GetToolsForTask(int taskNumber, out GameObject correctTool)
+        {
+            switch (taskNumber)
+            {
+                case 0: //gift wrapping task
+                    correctTool = extinguisher;
+                    return new GameObject[] { teddyBear, extinguisher, appleCore };
+                    
+                case 1: //sleigh repair task
+                    correctTool = guitar;
+                    return new GameObject[] { hammer, guitar, dynamite };
+                    
+                case 2: //snow shoveling task
+                    correctTool = clock;
+                    return new GameObject[] { shovel, camera, clock };
+                    
+                default:
+                    correctTool = null;
+                    return new GameObject[0];
             }
         }
         IEnumerator FadeInAnimation()
